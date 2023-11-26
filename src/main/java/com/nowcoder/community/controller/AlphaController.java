@@ -1,15 +1,24 @@
 package com.nowcoder.community.controller;
 
+import com.nowcoder.community.dao.DiscussPostMapper;
+import com.nowcoder.community.dao.UserMapper;
+import com.nowcoder.community.entity.DiscussPost;
+import com.nowcoder.community.entity.User;
 import com.nowcoder.community.service.AlphaService;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import com.nowcoder.community.service.DiscussPostService;
+import com.nowcoder.community.service.UserService;
+import com.nowcoder.community.util.CommunityUtil;
+import jakarta.servlet.http.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
+import java.beans.Transient;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
@@ -20,6 +29,12 @@ public class AlphaController {
 
     @Autowired
     private AlphaService alphaService;
+
+    @Autowired
+    private UserMapper userMapper;
+
+    @Autowired
+    private DiscussPostMapper discussPostMapper;
 
     @RequestMapping("/hello")
     @ResponseBody
@@ -132,5 +147,52 @@ public class AlphaController {
         return list;
     }
 
+    // Cookie
+    @RequestMapping(path = "/cookie/set", method = RequestMethod.GET)
+    @ResponseBody
+    public String setCookie(HttpServletResponse response) {
+        // Create Cookie
+        Cookie cookie = new Cookie("code", CommunityUtil.generateUUID());
+        // Cookie Path
+        cookie.setPath("/community/alpha");
+        // Cookie lifetime
+        cookie.setMaxAge(60 * 10);
+        // Send cookie
+        response.addCookie(cookie);
+
+        return "set cookie";
+    }
+
+    @RequestMapping(path = "/cookie/get", method = RequestMethod.GET)
+    @ResponseBody
+    public String getCookie(@CookieValue("code") String code) {
+        System.out.println(code);
+        return "get cookie";
+    }
+
+    // Session
+    @RequestMapping(path = "/session/set", method = RequestMethod.GET)
+    @ResponseBody
+    public String setSession(HttpSession session) {
+        session.setAttribute("id", 1);
+        session.setAttribute("name", "Test");
+        return "get session";
+    }
+
+    @RequestMapping(path = "/session/get", method = RequestMethod.GET)
+    @ResponseBody
+    public String getSession(HttpSession session) {
+        System.out.println(session.getAttribute("id"));
+        System.out.println(session.getAttribute("name"));
+        return "get session";
+    }
+
+    @RequestMapping(path = "/ajax", method = RequestMethod.POST)
+    @ResponseBody
+    public String testAjax(String name, int age) {
+        System.out.println(name);
+        System.out.println(age);
+        return CommunityUtil.getJSONString(0, "Successful");
+    }
 
 }
